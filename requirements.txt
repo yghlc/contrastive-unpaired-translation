@@ -6,3 +6,4 @@ packaging
 GPUtil>=1.4.0
 rasterio
 scikit-image
+psutil
