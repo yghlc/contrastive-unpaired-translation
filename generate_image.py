@@ -64,7 +64,7 @@ def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
         im = im.transpose(2,0,1)  # from from (H, W, C) to (C,H,W), for rasterio
         # image_name = '%s/%s.png' % (label, name)
         image_dir = os.path.join(res_dir, 'I%d' % img_idx)
-        if os.path.isdir(img_idx) is False:
+        if os.path.isdir(image_dir) is False:
             io_function.mkdir(image_dir)
         save_path = os.path.join(image_dir, 'I%d_%d.tif' % (img_idx, tile_idx))
         raster_io.save_numpy_array_to_rasterfile(im, save_path, org_img, format='GTiff',boundary=boundary)
