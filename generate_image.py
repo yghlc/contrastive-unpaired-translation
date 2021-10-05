@@ -45,6 +45,8 @@ sys.path.insert(0, deeplabforRS)
 import basic_src.io_function as io_function
 import raster_io
 
+import cv2
+
 def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
     '''
     save a genterate tile of satellite images
@@ -61,6 +63,11 @@ def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
+        height, width,band = im.shape
+        # resize if necessary
+        if width!= boundary[2] or height != boundary[3]:    # xsize, ysize
+            im = cv2.resize(im, dsize=(boundary[2], boundary[3]), interpolation=cv2.INTER_CUBIC)  # dsize=(width, height)
+
         im = im.transpose(2,0,1)  # from from (H, W, C) to (C,H,W), for rasterio
         # image_name = '%s/%s.png' % (label, name)
         image_dir = os.path.join(res_dir, 'I%d' % img_idx)
