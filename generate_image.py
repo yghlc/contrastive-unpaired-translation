@@ -61,6 +61,7 @@ def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
+        im = im.transpose(2,0,1)  # from from (H, W, C) to (C,H,W), for rasterio
         # image_name = '%s/%s.png' % (label, name)
         image_dir = os.path.join(res_dir, 'I%d' % img_idx)
         if os.path.isdir(img_idx) is False:
@@ -96,9 +97,12 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         # img_path = model.get_image_paths()     # get image paths
+        # data loader pack tile_boundary and org_img to tensors and list.
         img_idx, tile_idx, tile_boundary, org_img = model.get_img_tile_info()
+        tile_boundary = [ item.item() for item in tile_boundary]    # from tensor to int
+
         # if i % 5 == 0:  # save images to an HTML file
         print('processing (%04d)-th image (%05d)-th tiles...' % (img_idx, tile_idx))
         # save_images(webpage, visuals, img_path, width=opt.display_winsize)
-        save_satellite_tile(img_idx,tile_idx,tile_boundary,org_img,opt.results_dir,visuals)
+        save_satellite_tile(img_idx,tile_idx,tile_boundary,org_img[0],opt.results_dir,visuals)
     # webpage.save()  # save the HTML
