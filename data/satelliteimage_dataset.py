@@ -29,6 +29,8 @@ from PIL import Image
 import random
 import util.util as util
 
+import numpy as np
+
 # copy from build_RS_data.py
 class patchclass(object):
     """
@@ -62,6 +64,64 @@ def split_satellite_img_to_tiles(simg_list, save_dir, tile_width, tile_height, a
         out_list = split_image.split_image(img_path, save_dir, tile_width, tile_height, adj_overlay_x, adj_overlay_y, out_format)
         tile_list.extend(sorted(out_list))
     return tile_list
+
+
+def read_one_image_tile(tile_list, index):
+    img_idx, patch_obj, patch_idx = tile_list[index]['img_idx'], tile_list[index]['img_tile'], tile_list[index]['tile_idx']
+
+    tile_data, nodata = raster_io.read_raster_all_bands_np(patch_obj.org_img,boundary = patch_obj.boundary)
+    if nodata is not None:
+        tile_data[np.where(tile_data == nodata)] = 0    # replace nodata as 0
+
+    band_count = tile_data.shape[0]
+    if band_count == 3:
+        color_mode = 'RGB' # # need consider one band or others
+    else:
+        color_mode = ''
+        raise ValueError('Currently, only support 3-band')
+
+    # because TORCHVISION.TRANSFORMS accept both PIL images and tensor images, so we convert numpy image to PIL image.
+    data_rasterio_pil = tile_data.transpose(1,2,0)  # from (C,H,W) to (H, W, C)
+    tile_data_pil = Image.fromarray(data_rasterio_pil,mode=color_mode)
+    return tile_data_pil, img_idx, patch_idx, patch_obj
+
+
+def test_read_one_image_tile():
+    '''testing read image data through rasterio'''
+    # also compare with the data reading through PIL
+
+
+    image_path = os.path.expanduser('~/Data/tmp_data/CUT_dataset_test/trainA/20200818_mosaic_8bit_rgb_p_22.png')
+
+    data_rasterio,nodata = raster_io.read_raster_all_bands_np(image_path)
+
+    # read_one_image_tile(tile_list, index)
+
+    # reading the image using PIL
+    A_img = Image.open(image_path).convert('RGB')
+    print(A_img)
+    # A = self.transform(A_img)
+    print(data_rasterio.shape)  # channel, height, width
+    print(A_img.size, A_img.mode)
+
+    # PIL image to numpy image
+    pil_np_data = np.asarray(A_img).transpose(2,0,1)       # to numpy, from (H, W, C) to (C,H,W)
+    print(pil_np_data.shape)
+
+    diff = data_rasterio - pil_np_data
+    print('diff sum:',np.sum(diff))
+    print('diff max:',np.max(diff))
+    print('diff min:',np.min(diff))
+
+    # convert numpy image to PIL image and save to disk
+    save_path = io_function.get_name_by_adding_tail(image_path,'numpy_to_PIL')
+    print(data_rasterio.dtype)
+    data_rasterio_pil = data_rasterio.transpose(1,2,0)  # from (C,H,W) to (H, W, C)
+    np_pil = Image.fromarray(data_rasterio_pil,mode='RGB')
+    print(np_pil.size, np_pil.mode)
+    np_pil.save(save_path)
+
+
 
 class SatelliteImageDataset(BaseDataset):
 
@@ -114,25 +174,30 @@ class SatelliteImageDataset(BaseDataset):
         self.B_paths = None
         self.is_generate = opt.phase == "generate"
 
-        self.tiles_for_images = []
+        self.tiles_for_images = []  # this is 2d list, each 1d list is tiles for one images
+        self.tiles_1d = []          # this is 1d list of {img_index, tile}
 
         if opt.phase == "generate":
             # generating GAN results only for one side with the model option '-model test'
             sate_img_list = get_satellite_img_list(opt.image_A_dir_txt, opt.extension)
 
-            for img_path in sate_img_list:
+            for img_idx, img_path in enumerate(sate_img_list):
                 height, width, b_count, dtypes = raster_io.get_height_width_bandnum_dtype(img_path)
                 # split the image
                 patch_boundary = split_image.sliding_window(width, height, opt.tile_width,opt.tile_height,
                                                             opt.overlay_x,opt.overlay_y)
                 patches_of_a_image = []
-                for patch in patch_boundary:
+                for t_idx, patch in enumerate(patch_boundary):
                     # need to handle the patch with smaller size
                     # if patch[2] < crop_width or patch[3] < crop_height:   # xSize < 480 or ySize < 480
                     #     continue
                     img_patch = patchclass(img_path, patch)
                     patches_of_a_image.append(img_patch)
-                    self.tiles_for_images.append(patches_of_a_image)
+
+                    self.tiles_1d.append({'img_idx':img_idx, 'img_tile':img_patch, 'tile_idx':t_idx})
+
+                print('img_idx:',img_idx,img_path,'is divided to',len(patches_of_a_image), 'tiles')
+                self.tiles_for_images.append(patches_of_a_image)
 
             input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
             self.transform = get_transform(opt, grayscale=(input_nc == 1))
@@ -187,7 +252,9 @@ class SatelliteImageDataset(BaseDataset):
             # A_img = Image.open(A_path).convert('RGB')
             # A = self.transform(A_img)
             # return {'A': A, 'A_paths': A_path}
-            pass
+            A_img, img_idx, tile_idx, tile_obj = read_one_image_tile(self.tiles_1d, index)
+            A = self.transform(A_img)
+            return {'A': A, 'img_idx': img_idx, 'tile_idx': tile_idx,'tile_obj':tile_obj}
 
         else:
             # copy from unaligned_dataset.py
