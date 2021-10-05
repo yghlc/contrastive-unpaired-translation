@@ -98,7 +98,8 @@ class GenerateModel(BaseModel):
         self.real = input['A'].to(self.device)
         self.img_idx = input['img_idx']
         self.tile_idx = input['tile_idx']
-        self.tile_obj = input['tile_obj']
+        self.tile_boundary = input['tile_boundary'] # (xoff,yoff ,xsize, ysize) in pixel coordinate
+        self.org_img = input['org_img']         # path for the original satellite images
 
     def forward(self):
         """Run forward pass. This will be called by both functions <optimize_parameters> and <test>."""
@@ -109,4 +110,4 @@ class GenerateModel(BaseModel):
         pass
 
     def get_img_tile_info(self):
-        return self.img_idx, self.tile_idx,self.tile_obj
+        return self.img_idx, self.tile_idx,self.tile_boundary,self.org_img

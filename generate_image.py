@@ -45,13 +45,14 @@ sys.path.insert(0, deeplabforRS)
 import basic_src.io_function as io_function
 import raster_io
 
-def save_satellite_tile(img_idx, tile_idx, tile_obj,res_dir, visuals):
+def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
     '''
     save a genterate tile of satellite images
     Parameters:
         img_idx                  -- index of satellite image
         tile_idx                 -- index of the tile within a satellite image
-        tile_obj                 -- instance of patchclass, containing boundary and the original image path
+        boundary                 -- the extent of the path: (xoff,yoff ,xsize, ysize)
+        org_img                  -- the original image path
         res_dir                  -- the result directory
         visuals (OrderedDict)    -- an ordered dictionary that stores (name, images (either tensor or numpy) ) pairs
 
@@ -65,7 +66,6 @@ def save_satellite_tile(img_idx, tile_idx, tile_obj,res_dir, visuals):
         if os.path.isdir(img_idx) is False:
             io_function.mkdir(image_dir)
         save_path = os.path.join(image_dir, 'I%d_%d.tif' % (img_idx, tile_idx))
-        org_img, boundary = tile_obj.org_img, tile_obj.boundary
         raster_io.save_numpy_array_to_rasterfile(im, save_path, org_img, format='GTiff',boundary=boundary)
 
 
@@ -96,9 +96,9 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         # img_path = model.get_image_paths()     # get image paths
-        img_idx, tile_idx, tile_obj = model.get_img_tile_idx()
+        img_idx, tile_idx, tile_boundary, org_img = model.get_img_tile_info()
         # if i % 5 == 0:  # save images to an HTML file
         print('processing (%04d)-th image (%05d)-th tiles...' % (img_idx, tile_idx))
         # save_images(webpage, visuals, img_path, width=opt.display_winsize)
-        save_satellite_tile(img_idx,tile_idx,tile_obj,opt.results_dir,visuals)
+        save_satellite_tile(img_idx,tile_idx,tile_boundary,org_img,opt.results_dir,visuals)
     # webpage.save()  # save the HTML

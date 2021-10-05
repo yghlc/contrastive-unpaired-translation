@@ -254,7 +254,10 @@ class SatelliteImageDataset(BaseDataset):
             # return {'A': A, 'A_paths': A_path}
             A_img, img_idx, tile_idx, tile_obj = read_one_image_tile(self.tiles_1d, index)
             A = self.transform(A_img)
-            return {'A': A, 'img_idx': img_idx, 'tile_idx': tile_idx,'tile_obj':tile_obj}
+            # got error: TypeError: default_collate: batch must contain tensors, numpy arrays, numbers, dicts or lists;
+            # found <class 'data.satelliteimage_dataset.patchclass'>
+            # change to not using patchclass
+            return {'A': A, 'img_idx': img_idx, 'tile_idx': tile_idx,'tile_boundary':tile_obj.boundary, 'org_img':tile_obj.org_img}
 
         else:
             # copy from unaligned_dataset.py
