@@ -230,6 +230,8 @@ class SatelliteImageDataset(BaseDataset):
 
             self.A_size = len(self.A_paths)  # get the size of dataset A
             self.B_size = len(self.B_paths)  # get the size of dataset B
+            io_function.save_list_to_txt('read_to_train.txt',['image count: %d \n'%item for item in [self.A_size,self.B_size]])
+
 
 
     def __getitem__(self, index):
