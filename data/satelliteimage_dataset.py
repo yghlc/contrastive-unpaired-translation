@@ -63,6 +63,21 @@ def split_satellite_img_to_tiles(simg_list, save_dir, tile_width, tile_height, a
         print(datetime.now(),'split %d / %d, %s to tiles '%(idx, len(simg_list), img_path))
         out_list = split_image.split_image(img_path, save_dir, tile_width, tile_height, adj_overlay_x, adj_overlay_y, out_format)
         tile_list.extend(sorted(out_list))
+    
+    # check black tiles or most part of the sub-images is black (nodata)
+    new_tile_list = []
+    delete_tile_list = []
+    tile_dir_delete = save_dir + '_delete'
+    io_function.mkdir(tile_dir_delete)
+
+    for tile_path in tile_list:
+        valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(tile_path)    # base=10
+        if valid_per > 60 and entropy >= 0.5:
+            new_tile_list.append(tile_path)
+        else:
+            delete_tile_list.append(tile_path)
+            io_function.movefiletodir(tile_path,tile_dir_delete)
+    
     return tile_list
 
 
