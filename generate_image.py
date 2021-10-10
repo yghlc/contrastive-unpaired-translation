@@ -45,7 +45,7 @@ sys.path.insert(0, deeplabforRS)
 import raster_io
 import basic_src.io_function as io_function
 import basic_src.basic as basic
-# import basic_src.RSImageProcess as RSImageProcess     # doesnt work with rasterio when import rasterio, maybe caused by version
+# import basic_src.RSImageProcess as RSImageProcess     # doesnt work with rasterio when import rasterio, maybe caused by incompatible version
 
 import cv2
 
