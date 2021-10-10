@@ -42,8 +42,11 @@ import util.util as util
 deeplabforRS =  os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, deeplabforRS)
 
-import basic_src.io_function as io_function
 import raster_io
+import basic_src.io_function as io_function
+# import basic_src.RSImageProcess as RSImageProcess
+
+print('OK')
 
 import cv2
 
@@ -91,6 +94,7 @@ if __name__ == '__main__':
 
     model = create_model(opt)      # create a model given opt.model and other options
 
+    all_img_idx = []
     for i, data in enumerate(dataset):
         if i == 0:
             model.data_dependent_initialize(data)
@@ -112,4 +116,18 @@ if __name__ == '__main__':
         print('processing (%04d)-th image (%05d)-th tiles...' % (img_idx, tile_idx))
         # save_images(webpage, visuals, img_path, width=opt.display_winsize)
         save_satellite_tile(img_idx,tile_idx,tile_boundary,org_img[0],opt.results_dir,visuals)
+        if img_idx not in all_img_idx:
+            all_img_idx.append(img_idx)
     # webpage.save()  # save the HTML
+
+    # go through each image, then merge tiles
+    for img_idx in all_img_idx:
+        print(img_idx)
+        all_tiles = io_function.get_file_list_by_pattern(opt.results_dir,'I%d/*.tif'%img_idx)
+        merge_tiles_path = os.path.join(opt.results_dir,'I%d.tif')
+        if len(all_tiles) == 1:
+            io_function.move_file_to_dst(all_tiles[0], merge_tiles_path,overwrite=False)
+        else:
+            # use gdal_merge.py to merge files
+            RSImageProcess.mosaics_images(all_tiles,merge_tiles_path)  # nodata=None,compress=None,tiled=None, bigtiff=Non
+
