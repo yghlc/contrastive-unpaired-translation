@@ -44,9 +44,18 @@ sys.path.insert(0, deeplabforRS)
 
 import raster_io
 import basic_src.io_function as io_function
-import basic_src.RSImageProcess as RSImageProcess
+import basic_src.basic as basic
+# import basic_src.RSImageProcess as RSImageProcess     # doesnt work with rasterio when import rasterio, maybe caused by version
 
 import cv2
+
+
+def mosaic_tiles(tile_list, save_path,srcnodata=0,dst_nodata=0):
+    # mosaic files in tmp_saved_files
+    mosaic_args_list = ['gdal_merge.py', '-o', save_path, '-n', str(srcnodata), '-a_nodata', str(dst_nodata)]
+    mosaic_args_list.extend(tile_list)
+    if basic.exec_command_args_list_one_file(mosaic_args_list, save_path) is False:
+        raise IOError('error, obtain a mosaic (%s) failed' % save_path)
 
 def save_satellite_tile(img_idx, tile_idx, boundary, org_img,res_dir, visuals):
     '''
@@ -127,5 +136,5 @@ if __name__ == '__main__':
             io_function.move_file_to_dst(all_tiles[0], merge_tiles_path,overwrite=False)
         else:
             # use gdal_merge.py to merge files
-            RSImageProcess.mosaics_images(all_tiles,merge_tiles_path)  # nodata=None,compress=None,tiled=None, bigtiff=Non
+            mosaic_tiles(all_tiles,merge_tiles_path)
 
