@@ -77,7 +77,8 @@ def split_satellite_img_to_tiles(simg_list, save_dir, tile_width, tile_height, a
         else:
             delete_tile_list.append(tile_path)
             io_function.movefiletodir(tile_path,tile_dir_delete)
-    
+
+    tile_list = new_tile_list
     return tile_list
 
 
