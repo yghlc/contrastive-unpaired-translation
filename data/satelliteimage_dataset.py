@@ -244,6 +244,9 @@ class SatelliteImageDataset(BaseDataset):
                 self.B_paths = split_satellite_img_to_tiles(sate_img_list_B,self.dir_B,opt.tile_width,opt.tile_height,
                                                             opt.overlay_x,opt.overlay_y)
 
+                self.A_paths = self.A_paths[:min(opt.max_dataset_size, len(self.A_paths))]
+                self.B_paths = self.B_paths[:min(opt.max_dataset_size, len(self.B_paths))]
+
             self.A_size = len(self.A_paths)  # get the size of dataset A
             self.B_size = len(self.B_paths)  # get the size of dataset B
             io_function.save_list_to_txt('ready_to_train.txt',['image count: %d \n'%item for item in [self.A_size,self.B_size]])
