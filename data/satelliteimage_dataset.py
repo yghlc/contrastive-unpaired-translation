@@ -196,6 +196,10 @@ class SatelliteImageDataset(BaseDataset):
         if opt.phase == "generate":
             # generating GAN results only for one side with the model option '-model test'
             sate_img_list = get_satellite_img_list(opt.image_A_dir_txt, opt.extension)
+            if len(sate_img_list) > opt.max_dataset_size:
+                print(datetime.now(), 'warning, the count of images (%d) to translate is greater than max_dataset_size, '
+                                      'will only translate the first %d ones'%(len(sate_img_list), opt.max_dataset_size))
+                sate_img_list = sate_img_list[:opt.max_dataset_size]
 
             for img_idx, img_path in enumerate(sate_img_list):
                 height, width, b_count, dtypes = raster_io.get_height_width_bandnum_dtype(img_path)
