@@ -74,7 +74,7 @@ class GenerateModel(BaseModel):
 
         # # assigns the model to self.netG_[suffix] so that it can be loaded
         # # please see <BaseModel.load_networks>
-        # setattr(self, 'netG' + opt.model_suffix, self.netG)  # store netG in self.
+        setattr(self, 'netG' + opt.model_suffix, self.netG)  # store netG in self.
 
     def data_dependent_initialize(self, data):
         """
