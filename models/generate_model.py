@@ -39,8 +39,8 @@ class GenerateModel(BaseModel):
         """
         assert not is_train, 'GenerateModel cannot be used during training time'
         parser.set_defaults(dataset_mode='generate')
-        # parser.add_argument('--model_suffix', type=str, default='',
-        #                     help='In checkpoints_dir, [epoch]_net_G[model_suffix].pth will be loaded as the generator.')
+        parser.add_argument('--model_suffix', type=str, default='',
+                            help='In checkpoints_dir, [epoch]_net_G[model_suffix].pth will be loaded as the generator.')
 
         return parser
 
@@ -65,7 +65,7 @@ class GenerateModel(BaseModel):
         # specify the models you want to use
         # you can use opt to specify different behaviors for training and test.
         # CUT
-        self.model_names = ['G']
+        self.model_names = ['G' + opt.model_suffix] # opt.model_suffix = '_A' for cycleGAN
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.normG, not opt.no_dropout,
                                       opt.init_type, opt.init_gain, opt.no_antialias, opt.no_antialias_up, self.gpu_ids,
                                       opt)
